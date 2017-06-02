@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body { 
+                min-width: 420px; 
+                overflow-x: hidden; 
+                font-family: Arial, sans-serif; 
+                font-size: 12px; 
+            }
+            input, textarea { 
+                width: 420px; 
+            }
+            input#save { 
+                font-weight: bold; width: auto; 
+            }
+        </style>
+        <script src="js/popup.js"></script>
+    </head>
+    <body>
+        <form id="starttracking">
+            <p><label for="from">From</label><br />
+            <input type="text" id="from" name="from" size="50" value="" /></p>
+            <p><label for="to">To</label><br />
+            <input type="text" id="to" name="to" size="50" value="" /></p>
+            <p>
+                <input id="save" type="submit" value="Start Tracking" />
+                <span id="status-display"></span>
+            </p>
+        </form>
+    </body>
+</html>
