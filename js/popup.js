@@ -7,12 +7,14 @@ port = chrome.runtime.connect({
 function startTrack() {
     var from = document.getElementById("from").value;
     var to = document.getElementById("to").value;
+    var interval = document.getElementById("interval").value;
 
-    if (from !== "") {
+    if (from !== "" && to !== "" && interval != "") {
         port.postMessage({
-            name: "query",
+            name: "start",
             from: from,
-            to: to
+            to: to,
+            interval: interval
         });
 
         statusDisplay.innerHTML = "Started..";
@@ -23,10 +25,17 @@ function startTrack() {
 
 };
 
+function stop() {
+    port.postMessage({
+        name: "stop",
+    })
+}
+
 window.addEventListener('load', function(evt) {
     // Cache a reference to the status display SPAN
     statusDisplay = document.getElementById('status-display');
 
-    document.getElementById("starttracking").addEventListener("submit", startTrack);
+    document.getElementById("start").addEventListener("submit", startTrack);
+    document.getElementById("stop").onclick = stop;
     console.log("Loaded.");
 });
