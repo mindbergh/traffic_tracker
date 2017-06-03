@@ -1,6 +1,10 @@
 var alarmName = "tracker";
 var from = ""
 var to = ""
+var tenMin = 5 * 60 * 1000;
+
+var googleAPIsrc = "https://maps.googleapis.com/maps/api/js?key=YOUR_CLIENT_ID&v=3.28";
+var gmapService = null;
 
 // Listen for messages.
 function messageHandler(message) {
@@ -8,11 +12,30 @@ function messageHandler(message) {
 
         from = message.from;
         to = message.to;
+
+        setupGoogleAPI(message.key)
+
         updateAlarm(message.interval);
     } else if (message.name === "stop") {
         stopAlarm();
     }
 };
+
+function setupGoogleAPI(key) {
+    if (gmapService) {
+        return;
+    }
+
+    var script = document.createElement("script");
+    var src = googleAPIsrc.replace("YOUR_CLIENT_ID", key);
+    script.setAttribute("src", src);
+    script.setAttribute("defer", "");
+    script.setAttribute("async", "");
+    document.getElementsByTagName("head")[0].appendChild(script);
+
+    return;
+}
+
 
 function stopAlarm() {
     chrome.alarms.clear(alarmName);
@@ -31,8 +54,41 @@ function updateAlarm(interval) {
 
 
 function track() {
-    chrome.browserAction.setBadgeText({text: from});
     console.log("Track triggered: " + from + ", " + to);
+
+    if (!gmapService) {
+
+        try {
+            gmapService = new google.maps.DistanceMatrixService();
+        } catch(e) {
+            setTimeout(track, 2000);
+            return;
+        }
+    }
+
+    gmapService.getDistanceMatrix(
+        {
+            origins: [from],
+            destinations: [to],
+            travelMode: 'DRIVING',
+            drivingOptions: {
+                departureTime: new Date(Date.now() + 5 * 60 * 1000)
+            },
+            avoidHighways: false,
+            avoidTolls: false,
+
+        }, trackCallBack
+    );
+};
+
+function trackCallBack(response, status) {
+    if (status !== "OK") {
+        console.error("GoogleMap error: " + status);
+    }
+
+    var duration = response.rows[0].elements[0].duration_in_traffic.text;
+    console.log(duration);
+    chrome.browserAction.setBadgeText({text: duration.replace(" mins", "m")});
 }
 
 chrome.extension.onConnect.addListener(function(port) {
@@ -49,3 +105,4 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
         track()
     }
 });
+
