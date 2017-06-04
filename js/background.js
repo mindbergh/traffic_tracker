@@ -1,8 +1,5 @@
 var alarmName = "tracker";
-var from = ""
-var to = ""
-var tenMin = 5 * 60 * 1000;
-
+var takeOffDelay = 5 * 60 * 1000;
 var googleAPIsrc = "https://maps.googleapis.com/maps/api/js?key=YOUR_CLIENT_ID&v=3.28";
 var gmapService = null;
 
@@ -10,11 +7,7 @@ var gmapService = null;
 function messageHandler(message) {
     if (message.name === "start") {
 
-        from = message.from;
-        to = message.to;
-
         setupGoogleAPI(message.key)
-
         updateAlarm(message.interval);
     } else if (message.name === "stop") {
         stopAlarm();
@@ -22,12 +15,18 @@ function messageHandler(message) {
 };
 
 function setupGoogleAPI(key) {
+    if (!key) {
+        console.error("API key is not there..");
+    }
     if (gmapService) {
         return;
     }
 
     var script = document.createElement("script");
     var src = googleAPIsrc.replace("YOUR_CLIENT_ID", key);
+
+    console.log("Update GoogleMapAPI src as " + src);
+
     script.setAttribute("src", src);
     script.setAttribute("defer", "");
     script.setAttribute("async", "");
@@ -43,17 +42,26 @@ function stopAlarm() {
 }
 
 function updateAlarm(interval) {
-    stopAlarm()
+    stopAlarm();
 
     var intervalInt = parseInt(interval, 10);
     chrome.alarms.create(alarmName, {
         delayInMinutes: 0,
         periodInMinutes: intervalInt,
     });
+    console.log("Alarm: " + alarmName + " created.");
 };
 
 
 function track() {
+    if (!localStorage.hasOwnProperty("from") || !localStorage.hasOwnProperty("to")) {
+        console.warn("No instruction found..");
+        return;
+    }
+
+    //var from =
+    var from = localStorage.from;
+    var to = localStorage.to;
     console.log("Track triggered: " + from + ", " + to);
 
     if (!gmapService) {
@@ -72,7 +80,7 @@ function track() {
             destinations: [to],
             travelMode: 'DRIVING',
             drivingOptions: {
-                departureTime: new Date(Date.now() + 5 * 60 * 1000)
+                departureTime: new Date(Date.now() + takeOffDelay)
             },
             avoidHighways: false,
             avoidTolls: false,
